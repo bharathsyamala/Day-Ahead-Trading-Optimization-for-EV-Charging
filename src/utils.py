@@ -28,6 +28,9 @@ CUR_DIR = Path(__file__).resolve()
 ROOT_DIR = CUR_DIR.parent.parent
 RAW_DATA_DIR = ROOT_DIR/'data'/'raw'
 PROCESSED_DATA_DIR = ROOT_DIR/'data'/'processed'
+FORECASTED_DATA_DIR = ROOT_DIR/'data'/'forecasted'
+EV_DATA_DIR = ROOT_DIR/'data'/'ev'
+OPTIMIZED_DATA_DIR = ROOT_DIR/'data'/'optimized'
 
 '''
 print(CUR_DIR)
