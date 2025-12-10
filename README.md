@@ -10,57 +10,106 @@ The project uses four years of historical Dutch day ahead price and generation d
 
 <img width="4564" height="900" alt="image" src="https://github.com/user-attachments/assets/8cbd010d-0eef-4840-a801-93e2c6935b8d" />
 
+
+## Optimization Model Formulation
+
+### Sets
+
+$I$: Electric vehicles
+
+$T = {0,\ldots,T_{max}}$: Time steps
+
+$T_i \subseteq T$: Time steps when EV $i$ can charge
+
+### Parameters
+
+$p_t$: Electricity price at time $t$
+
+$R_t$: Renewable energy fraction at time $t$
+
+$MP_i$: Max charging power for EV $i$
+
+$MC_i$: Battery capacity for EV $i$
+
+$SOC_{i,0}$: Initial state of charge
+
+$SOC_{i,des}$: Desired state of charge
+
+$t_{i,a}$: Arrival time
+
+$t_{i,d}$: Departure time
+
+$avail_{i,t} \in {0,1}$: Availability
+
+$\eta$: Charging efficiency
+
+$\lambda_{carb}$: Carbon penalty coefficient
+
+$W$: Slack penalty weight
+
+### Decision Variables
+
+$$PD_{i,t} \ge 0$$: Charging power
+
+$$SOC_{i,t} \ge 0$$: State of charge
+
+$$slack_i \ge 0$$: Slack for unmet SOC
+
+### Objective
+
+$$\min\ \displaystyle \sum_{t\in T} \left( p_t + \lambda_{carb}(1 - R_t) \right)\left(\frac{1}{1000}\sum_{i:\ t\in T_i} PD_{i,t}\right) + W\sum_{i\in I} slack_i$$
+
+### Constraints
+
+#### Power limit
+$$0 \le PD_{i,t} \le MP_i \cdot avail_{i,t} \quad \forall i,\ t \in T_i$$
+
+#### Arrival SOC
+$$SOC_{i, t_{i,a}} = SOC_{i,0} + \eta, PD_{i,t_{i,a}}$$
+
+#### SOC dynamics
+$$SOC_{i,t} = SOC_{i,t-1} + \eta, PD_{i,t} \quad \forall i,\ t\in T_i,\ t > t_{i,a}$$
+
+#### Capacity constraint
+$$SOC_{i,t} \le MC_i \quad \forall i,\ t\in T_i$$
+
+#### Departure SOC requirement
+$$SOC_{i,t_{i,d}} + slack_i \ge SOC_{i,des} \quad \forall i$$
+
+#### Nonnegativity
+$$PD_{i,t} \ge 0,\quad SOC_{i,t} \ge 0,\quad slack_i \ge 0$$
+
+
 ## Project Architecture  
 
+```
 Day-Ahead-Trading-Optimization-for-EV-Charging
-
 │
-
-├── main.py End to end pipeline execution
-
-├── environment.yml Reproducible Conda environment
-
+├── main.py # End-to-end pipeline execution
+├── environment.yml # Reproducible Conda environment
 │
-
 ├── src/
-
-│ ├── data_loading.py    # Load ENTSOe price and generation data
-
-│ ├── data_cleaning.py    # Clean and merge processed dataset
-
-│ ├── data_forecasting.py    # XGBoost day ahead price forecasting
-
-│ ├── generate_ev_data.py    # Generate EV arrival and departure sessions
-
-│ ├── optimization_model.py    # Pyomo MILP model and HiGHS solution
-
-│ └── utils.py    # General utility functions
-
+│ ├── data_loading.py # Load ENTSOe price & generation data
+│ ├── data_cleaning.py # Clean & merge datasets
+│ ├── data_forecasting.py # XGBoost day-ahead price forecasting
+│ ├── generate_ev_data.py # Generate EV sessions
+│ ├── optimization_model.py # Pyomo MILP model (HiGHS solver)
+│ └── utils.py # Utility functions
 │
-
 ├── data/
-
-│ ├── raw/    # Raw ENTSOe inputs
-
-│ ├── processed/    # Cleaned merged dataset
-
-│ ├── forecasted/    # Forecasted Price dataset
-
-│ ├── ev/    # EV dataset
-
-│ └── optimized/    # Optimization results
-
+│ ├── raw/ # ENTSOe inputs
+│ ├── processed/ # Cleaned dataset
+│ ├── forecasted/ # Forecasted prices
+│ ├── ev/ # EV session data
+│ └── optimized/ # Optimization results
 │
-
-├── analysis_notebooks/    # Plotly based EDA and validation notebooks
-
-│ ├── exploratory_analysis.ipynb    # Post-cleaning, pre-forecasting data analysis notebook
-
-│ └── optimization_visualization.ipynb    # Optimization results visualization
-
+├── analysis_notebooks/
+│ ├── exploratory_analysis.ipynb # Pre-forecasting EDA
+│ └── optimization_visualization.ipynb # Results visualization
 │
-
 └── README.md
+
+```
 
 ## Input Data Requirements  
 
@@ -93,8 +142,6 @@ conda activate ev_opti_modelling
 ### 2. Run the full workflow  
 
 python main.py
-
-
 
 This runs the complete pipeline:  
 1. Load ENTSOe market and generation data  
